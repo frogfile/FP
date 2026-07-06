@@ -15,9 +15,19 @@ namespace Floaters
     public:
         Fixed(double &val);
 
-        Fixed(uint16_t integer, uint16_t raw_decimal)
+        /**
+         * @brief Construct a new Fixed object from raw integer and decimal bits
+         * the representation is anchored around the decimal point and in case
+         * any/both parts don't fit, the integer will be cut off from the left
+         * and decimal from the right.
+         *
+         * @param raw_integer regular unsigned int bits
+         * @param raw_decimal decimal bits
+         */
+        Fixed(uint32_t raw_integer, uint32_t raw_decimal)
         {
-            _raw = (static_cast<uint32_t>(integer) << NumDecimalBits()) + raw_decimal;
+            // FIXME: Decimal gets cut off on the left for some reason
+            _raw = (raw_integer << NumDecimalBits()) + (raw_decimal >> NumIntegerBits());
         }
 
         constexpr uint32_t Raw() const
@@ -32,6 +42,7 @@ namespace Floaters
 
         constexpr uint16_t DecimalPartRaw() const
         {
+            // FIXME: Hardcoded 16 bit
             // NOLINTNEXTLINE
             return static_cast<uint16_t>(_raw & 0x0000'FFFF);
         }
@@ -51,15 +62,7 @@ namespace Floaters
 
         constexpr operator double() const
         {
-            uint32_t buf = _raw;
-            double acc = (double)IntegerPart();
-
-            for (uint8_t i = DecBits; i > 0; i--)
-            {
-                acc += (buf & 1) * (1 / std::pow(2, i));
-                buf >>= 1;
-            }
-            return acc;
+            return (double)IntegerPart() + DecPartAsDouble();
         }
 
         friend std::ostream &
@@ -73,8 +76,7 @@ namespace Floaters
         };
 
     private:
-        // NOLINTNEXTLINE
-        static constexpr uint8_t NumDecimalBits() { return DecBits; };
+        static constexpr uint8_t NumDecimalBits() { return DecBits; }
 
         static constexpr uint8_t NumIntegerBits()
         {
