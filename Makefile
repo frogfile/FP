@@ -19,7 +19,7 @@ CXXFLAGS := -Wall -Wextra -std=c++17 -fcolor-diagnostics -fansi-escape-codes -I$
 ifeq ($(COMPTYPE), release)
 CXXFLAGS += -O3
 else ifeq ($(COMPTYPE), debug)
-CXXFLAGS += -O0 -g
+CXXFLAGS += -Og -g
 else
 $(error Bad compile type: $(COMPTYPE))
 endif
@@ -49,13 +49,13 @@ clean:
 $(BINDIR)/$(BIN_NAME): $(OBJS)
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
-$(OBJDIR)/%.o: */%.cxx
+$(OBJDIR)/%.o: */%.cxx $(OBJDIR)/%.d
 	$(MKDIR) $(OBJDIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OBJDIR)/%.d: */%.cxx
 	$(MKDIR) $(OBJDIR)
-	$(CXX) $(CXXFLAGS) -MM $< > "$@"
+	$(CXX) $(CXXFLAGS) -MMD -MF $@ -c -o $(subst .d,.o, $@) $<
 
 ifneq ($(filter build obj,$(MAKECMDGOALS)),)
     -include $(DEPS)
