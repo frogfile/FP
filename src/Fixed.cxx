@@ -1,8 +1,4 @@
-#include "floater/Fixed.hxx"
-
+#include "fp/Fixed.hxx"
 #include <cstdint>
 
-namespace Floaters
-{
-
-} // namespace Floaters
+namespace FP {} // namespace FP

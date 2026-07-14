@@ -1,6 +1,8 @@
 CompileFlags:
   Add: [
     -std=c++17,
-    -I./include,
+    -I/home/uberjaba/Desktop/Floater/include,
     -Wall
+    -Wextra 
   ]
+  Compiler: clang++

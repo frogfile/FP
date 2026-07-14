@@ -1,0 +1,17 @@
+#pragma once
+
+#include "FP.hxx"
+
+namespace FP {
+class Floating : public IPoint<sizeof(float)> {
+public:
+  Floating() = default;
+  Floating(Floating &&) = default;
+  Floating(const Floating &) = default;
+  Floating &operator=(Floating &&) = default;
+  Floating &operator=(const Floating &) = default;
+  ~Floating() = default;
+
+private:
+};
+} // namespace FP

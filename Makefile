@@ -19,7 +19,7 @@ CXXFLAGS := -Wall -Wextra -std=c++17 -fcolor-diagnostics -fansi-escape-codes -I$
 ifeq ($(COMPTYPE), release)
 CXXFLAGS += -O3
 else ifeq ($(COMPTYPE), debug)
-CXXFLAGS += -Og -g
+CXXFLAGS += -O0 -g
 else
 $(error Bad compile type: $(COMPTYPE))
 endif

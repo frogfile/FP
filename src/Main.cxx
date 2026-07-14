@@ -1,15 +1,13 @@
-#include "floater/Fixed.hxx"
-
-#include <iostream>
+#include "fp/Fixed.hxx"
+#include <array>
 #include <bitset>
+#include <cstdint>
+#include <iostream>
 
-int main(int argc, char const *argv[])
-{
-  auto fixed = Floaters::Fixed<17>(0x00'00'00'0F, 0xC0'00'00'00);
+int main(int argc, char const *argv[]) {
+  auto fixed = FP::Fixed<4, 16>(std::array<uint8_t, 4>{0x00, 16, 0x80, 0x00});
 
-  std::cout << fixed << '\n';
-
-  std::cout << (double)fixed << '\n';
+  std::cout << (double)fixed;
 
   return 0;
 }
