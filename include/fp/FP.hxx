@@ -22,12 +22,13 @@ public:
   constexpr std::array<uint8_t, ISizeBytes> Raw() const { return _raw; };
 
   virtual operator double() const = 0;
-  virtual IPoint &operator+(IPoint &rhs) const = 0;
-  virtual IPoint &operator-(IPoint &rhs) const = 0;
-  virtual IPoint &operator*(IPoint &rhs) const = 0;
-  virtual IPoint &operator/(IPoint &rhs) const = 0;
-  virtual IPoint &operator>(IPoint &rhs) const = 0;
-  virtual IPoint &operator<(IPoint &rhs) const = 0;
-  virtual IPoint &operator==(IPoint &rhs) const = 0;
+
+  // virtual IPoint &operator+(IPoint const &rhs) const = 0;
+  // virtual IPoint &operator-(IPoint const &rhs) const = 0;
+  // virtual IPoint &operator*(IPoint const &rhs) const = 0;
+  // virtual IPoint &operator/(IPoint const &rhs) const = 0;
+  // virtual IPoint &operator>(IPoint const &rhs) const = 0;
+  // virtual IPoint &operator<(IPoint const &rhs) const = 0;
+  // virtual IPoint &operator==(IPoint const &rhs) const = 0;
 };
 } // namespace FP
