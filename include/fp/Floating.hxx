@@ -3,6 +3,7 @@
 #include "FP.hxx"
 
 namespace FP {
+
 class Floating : public IPoint<sizeof(float)> {
 public:
   Floating() = default;

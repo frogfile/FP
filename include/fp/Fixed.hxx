@@ -1,10 +1,12 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <bitset>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <exception>
 #include <ostream>
 
 #include "FP.hxx"
@@ -13,24 +15,28 @@ namespace FP {
 
 template <size_t FSizeBytes, size_t DecBits>
 class Fixed : public virtual IPoint<FSizeBytes> {
+private:
+  typedef IPoint<FSizeBytes> Base;
 
 public:
-  static const size_t Size = FSizeBytes;
-  static const size_t NumDecimalBits = DecBits;
-  static const size_t NumIntegerBits = FSizeBytes * 8 - DecBits;
+  static constexpr size_t Size = FSizeBytes;
+  static constexpr size_t NumDecimalBits = DecBits;
+  static constexpr size_t NumIntegerBits = FSizeBytes * 8 - DecBits;
 
-  Fixed(std::array<uint8_t, FSizeBytes> raw) : IPoint<FSizeBytes>(raw) {};
-  Fixed() : IPoint<FSizeBytes>() {};
+  Fixed(std::array<uint8_t, FSizeBytes> raw) : Base(raw) {
+    if (FSizeBytes * 8 < DecBits)
+      throw std::invalid_argument(
+          "More decimal bits than the specified size allows");
+  }
+
+  Fixed() : Base() {};
+
+  template <size_t RSize, size_t RDec>
+  Fixed(Fixed<RSize, RDec> const &other){
+
+  };
 
   Fixed(double &val);
-
-  constexpr typename std::array<uint8_t, FSizeBytes>::iterator Begin() const {
-    return this->_raw.begin();
-  }
-
-  constexpr typename std::array<uint8_t, FSizeBytes>::iterator End() const {
-    return this->_raw.end();
-  }
 
   constexpr operator std::bitset<FSizeBytes * 8>() const {
     auto ret = std::bitset<FSizeBytes * 8>();
@@ -41,6 +47,10 @@ public:
     }
 
     return ret;
+  }
+
+  constexpr std::bitset<FSizeBytes * 8> Bits() const {
+    return (std::bitset<FSizeBytes * 8>)this;
   }
 
   // FIXME: Only works if the Fixed fits into double
@@ -59,22 +69,42 @@ public:
     return out;
   };
 
-  // Fixed &operator+(IPoint<FSizeBytes> const &rhs) const override {
-  //   return Fixed();
-  // };
-  //
-  // Fixed &
-  // operator-(IPoint<FSizeBytes> const &rhs) const override { /* TODO: */ };
-  // Fixed &
-  // operator*(IPoint<FSizeBytes> const &rhs) const override { /* TODO: */ };
-  // Fixed &
-  // operator/(IPoint<FSizeBytes> const &rhs) const override { /* TODO: */ };
-  // Fixed &
-  // operator>(IPoint<FSizeBytes> const &rhs) const override { /* TODO: */ };
-  // Fixed &
-  // operator<(IPoint<FSizeBytes> const &rhs) const override { /* TODO: */ };
+  constexpr uint8_t &operator[](size_t idx) { return this->_raw.at(idx); };
 
-  // Fixed &
-  // operator==(IPoint<FSizeBytes> const &rhs) const override { /* TODO: */ };
+// Widen left and right separately
+#define WIDENED                                                                \
+  Fixed<FSizeBytes + (RDec - DecBits) / 8 +                                    \
+            ((RSize * 8 - RDec) - NumIntegerBits) / 8,                         \
+        (RDec >= DecBits ? RDec : DecBits)>
+
+  // NOTE: widen this to fit template arguments
+  template <size_t RSize, size_t RDec> constexpr WIDENED relaxed() const {
+
+    if (RSize < FSizeBytes)
+      throw std::invalid_argument("New size is smaller than old size");
+
+    auto ret = WIDENED();
+
+    for (size_t i = 0; i < FSizeBytes; i++) {
+      ret[i + (ret.NumIntegerBits - NumIntegerBits) / 8] = this->_raw[i];
+    }
+
+    return ret;
+  };
+#undef WIDENED
+
+  // NOTE: Return type is widened to fit bytes of both lhs and rhs
+  Fixed constexpr operator+(Fixed const &rhs) const {
+
+    for (size_t i = FSizeBytes - 2; i <= 0; i--) {
+      // TODO: add bytes with carry
+    }
+  };
+  // Fixed operator-(Fixed const &rhs) const override { /* TODO: */ };
+  // Fixed operator*(Fixed const &rhs) const override { /* TODO: */ };
+  // Fixed operator/(Fixed const &rhs) const override { /* TODO: */ };
+  // bool operator>(Fixed const &rhs) const override { /* TODO: */ };
+  // bool operator<(Fixed const &rhs) const override { /* TODO: */ };
+  // bool operator==(Fixed const &rhs) const override { /* TODO: */ };
 };
 } // namespace FP
