@@ -17,6 +17,15 @@ protected:
   ~IPoint() = default;
 
 public:
+  virtual constexpr size_t Size() const = 0;
+  virtual constexpr size_t NumDecimalBits() const = 0;
+  virtual constexpr size_t NumIntegerBits() const = 0;
+
+  constexpr bool Fits(IPoint const &rhs) {
+    return (NumIntegerBits() >= rhs.NumIntegerBits()) &&
+           (NumDecimalBits() >= rhs.NumDecimalBits());
+  };
+
   IPoint(std::array<uint8_t, ISizeBytes> raw) : _raw(raw) {}
 
   constexpr std::array<uint8_t, ISizeBytes> Raw() const { return _raw; };
