@@ -13,7 +13,7 @@
 
 namespace FP {
 
-template <size_t FSizeBytes, size_t DecBits>
+template <size_t FSizeBytes = 8, size_t DecBits = 16>
 class Fixed : public virtual IPoint<FSizeBytes> {
 private:
   typedef IPoint<FSizeBytes> Base;
@@ -50,7 +50,7 @@ public:
   }
 
   constexpr std::bitset<FSizeBytes * 8> Bits() const {
-    return (std::bitset<FSizeBytes * 8>)this;
+    return static_cast<std::bitset<FSizeBytes * 8>>(this);
   }
 
   // FIXME: Only works if the Fixed fits into double
@@ -69,21 +69,21 @@ public:
     return out;
   };
 
-  constexpr uint8_t &operator[](size_t idx) { return this->_raw.at(idx); };
-
-// Widen left and right separately
-#define WIDENED                                                                \
-  Fixed<FSizeBytes + (RDec - DecBits) / 8 +                                    \
-            ((RSize * 8 - RDec) - NumIntegerBits) / 8,                         \
-        (RDec >= DecBits ? RDec : DecBits)>
+  // Widen left and right separately.
+  // `Fixed` widened to fit Fixed<RSize,RDec>
+  template <size_t RSize, size_t RDec>
+  using RelaxedType = Fixed<FSizeBytes + (RDec - DecBits) / 8 +
+                                ((RSize * 8 - RDec) - NumIntegerBits) / 8,
+                            (RDec >= DecBits ? RDec : DecBits)>;
 
   // NOTE: widen this to fit template arguments
-  template <size_t RSize, size_t RDec> constexpr WIDENED relaxed() const {
+  template <size_t RSize, size_t RDec>
+  constexpr RelaxedType<RSize, RDec> relaxed() const {
 
     if (RSize < FSizeBytes)
       throw std::invalid_argument("New size is smaller than old size");
 
-    auto ret = WIDENED();
+    auto ret = RelaxedType<RSize, RDec>();
 
     for (size_t i = 0; i < FSizeBytes; i++) {
       ret[i + (ret.NumIntegerBits - NumIntegerBits) / 8] = this->_raw[i];
@@ -91,15 +91,41 @@ public:
 
     return ret;
   };
-#undef WIDENED
 
-  // NOTE: Return type is widened to fit bytes of both lhs and rhs
-  Fixed constexpr operator+(Fixed const &rhs) const {
-
-    for (size_t i = FSizeBytes - 2; i <= 0; i--) {
-      // TODO: add bytes with carry
-    }
+  // Check if this Fixed can fit Fixed<RSize,RDec> inside it
+  template <size_t RSize, size_t RDec> static constexpr bool Fits() {
+    return (NumIntegerBits >= RSize * 8 - RDec) && (DecBits >= RDec);
   };
+
+  // Check if this Fixed can fit T inside it
+  template <class T> static constexpr bool Fits() {
+    return (NumIntegerBits >= T::NumIntegerbits) &&
+           (NumDecimalBits >= T::NumDecimalBits);
+  };
+
+  template <class T> static constexpr bool Fits(T const &&rhs) {
+    return (NumIntegerBits >= T::NumIntegerbits) &&
+           (NumDecimalBits >= T::NumDecimalBits);
+  };
+
+  // NOTE: lhs must fit rhs
+  template <size_t RSize, size_t RDec>
+  Fixed constexpr operator+(Fixed<RSize, RDec> const &rhs) const {
+
+    if (!this->Fits(rhs) && !rhs.Fits(this))
+      throw std::invalid_argument("Incompatible types");
+
+    if (this->Fits(rhs)) {
+      auto ret = Fixed<FSizeBytes, DecBits>();
+      // TODO:
+      return ret;
+    }
+
+    auto ret = Fixed<RSize, RDec>();
+    // TODO:
+    return ret;
+  };
+
   // Fixed operator-(Fixed const &rhs) const override { /* TODO: */ };
   // Fixed operator*(Fixed const &rhs) const override { /* TODO: */ };
   // Fixed operator/(Fixed const &rhs) const override { /* TODO: */ };

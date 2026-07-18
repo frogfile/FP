@@ -30,6 +30,8 @@ public:
     return this->_raw.end();
   }
 
+  constexpr uint8_t &operator[](size_t idx) { return this->_raw.at(idx); };
+
   virtual operator double() const = 0;
 
   // virtual Derived operator+(Derived const &rhs) const = 0;
