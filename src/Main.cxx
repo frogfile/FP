@@ -12,6 +12,8 @@ int main(int argc, char const *argv[]) {
 
   std::cout << fixed4 << '\n';
 
+  std::cout << fixed4 + fixed8;
+
   std::cout << fixed4.relaxed<6, 3 * 8 + 2>() << '\n'; // expected 5 24
 
   return 0;

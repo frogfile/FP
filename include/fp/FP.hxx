@@ -5,7 +5,7 @@
 #include <cstdint>
 namespace FP {
 //
-template <std::size_t ISizeBytes> class IPoint {
+template <std::size_t ISizeBytes, class Derived> class IPoint {
 protected:
   std::array<uint8_t, ISizeBytes> _raw;
 
@@ -17,13 +17,27 @@ protected:
   ~IPoint() = default;
 
 public:
-  virtual constexpr size_t Size() const = 0;
-  virtual constexpr size_t NumDecimalBits() const = 0;
-  virtual constexpr size_t NumIntegerBits() const = 0;
+  static constexpr size_t Size() { return Derived::Size(); };
+  static constexpr size_t NumDecimalBits() {
+    return Derived::NumDecimalBits();
+  };
+  static constexpr size_t NumIntegerBits() {
+    return Derived::NumIntegerBits();
+  };
 
-  constexpr bool Fits(IPoint const &rhs) {
+  template <std::size_t RSize, class RD>
+  static constexpr bool Fits(IPoint<RSize, RD> const &rhs) {
     return (NumIntegerBits() >= rhs.NumIntegerBits()) &&
            (NumDecimalBits() >= rhs.NumDecimalBits());
+  };
+
+  template <class RHS> static constexpr bool Fits() {
+    return (NumIntegerBits() >= RHS::NumIntegerBits()) &&
+           (NumDecimalBits() >= RHS::NumDecimalBits());
+  };
+
+  template <std::size_t RNIB, std::size_t RNDB> static constexpr bool Fits() {
+    return (NumIntegerBits() >= RNIB) && (NumDecimalBits() >= RNDB);
   };
 
   IPoint(std::array<uint8_t, ISizeBytes> raw) : _raw(raw) {}
@@ -39,7 +53,8 @@ public:
     return this->_raw.end();
   }
 
-  constexpr uint8_t &operator[](size_t idx) { return this->_raw.at(idx); };
+  constexpr uint8_t &at(size_t idx) { return this->_raw.at(idx); };
+  constexpr uint8_t &operator[](size_t idx) { return this->_raw[idx]; };
 
   virtual operator double() const = 0;
 

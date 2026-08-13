@@ -20,29 +20,26 @@ namespace FP {
 // doesn't matter since you'll run out of memory waaaay before it becomes an
 // issue
 template <size_t FSizeBytes = 8, size_t DecBits = 16>
-class Fixed : public virtual IPoint<FSizeBytes> {
+class Fixed : public virtual IPoint<FSizeBytes, Fixed<FSizeBytes, DecBits>> {
 private:
-  typedef IPoint<FSizeBytes> Base;
+  using Base = IPoint<FSizeBytes, Fixed<FSizeBytes, DecBits>>;
 
 public:
-  constexpr size_t Size() const override { return FSizeBytes; };
-  constexpr size_t NumDecimalBits() const override { return DecBits; };
-  constexpr size_t NumIntegerBits() const override {
-    return FSizeBytes * 8 - DecBits;
-  };
+  static constexpr size_t Size() { return FSizeBytes; };
+  static constexpr size_t NumDecimalBits() { return DecBits; };
+  static constexpr size_t NumIntegerBits() { return FSizeBytes * 8 - DecBits; };
 
   Fixed(std::array<uint8_t, FSizeBytes> raw) : Base(raw) {
-    if (FSizeBytes * 8 < DecBits)
-      throw std::invalid_argument(
-          "More decimal bits than the specified size allows");
+    static_assert(FSizeBytes * 8 >= DecBits,
+                  "More decimal bits than the specified size allows");
   }
 
   Fixed() : Base() {};
 
-  template <size_t RSize, size_t RDec> Fixed(Fixed<RSize, RDec> const &other) {
-    if (!Fixed::Fits<RSize, RDec>())
-      throw std::invalid_argument("Other is bigger than this");
-    // TODO:
+  template <size_t RSize, size_t RDec>
+  Fixed(Fixed<RSize, RDec> const &other){
+      // static_assert(Fixed::Fits(other), "Other is bigger than this");
+      // TODO:
   };
 
   Fixed(double &val);
@@ -64,8 +61,8 @@ public:
 
   // NOTE: Only works if the Fixed fits into double (duh)
   constexpr operator double() const override {
-    if (FSizeBytes > sizeof(double))
-      throw std::length_error("Fixed doesn't fit into double");
+    static_assert(FSizeBytes <= sizeof(double),
+                  "Fixed doesn't fit into double");
 
     double ret = 0;
     for (size_t i = 0; i < FSizeBytes * 8; i++) {
@@ -95,41 +92,27 @@ public:
   template <size_t RSize, size_t RDec>
   constexpr RelaxedType<RSize, RDec> relaxed() const {
 
-    if (RSize < FSizeBytes)
-      throw std::invalid_argument("New size is smaller than old size");
-
+    static_assert(RSize > FSizeBytes,
+                  "New size is smaller than, or is the same as old size");
     auto ret = RelaxedType<RSize, RDec>();
 
     for (size_t i = 0; i < FSizeBytes; i++) {
       // FIXME: point not aligned actually
-      ret[i + (ret.NumIntegerBits() - this->NumIntegerBits()) / 8] =
+      ret.at(i + (ret.NumIntegerBits() - this->NumIntegerBits()) / 8) =
           this->_raw[i];
     }
 
     return ret;
   };
 
-  // Check if this Fixed can fit Fixed<RSize,RDec> inside it
-  template <size_t RSize, size_t RDec> static constexpr bool Fits() {
-    return ((FSizeBytes * 8 - DecBits) >= RSize * 8 - RDec) &&
-           (DecBits >= RDec);
-  };
-
   // NOTE: lhs must fit rhs
   template <size_t RSize, size_t RDec>
-  Fixed constexpr operator+(Fixed<RSize, RDec> const &rhs) const {
+  constexpr Fixed operator+(Fixed<RSize, RDec> const &rhs) const {
+    static_assert(Fixed::template Fits<RSize * 8 - RDec, RDec>(),
+                  "Lhs does not fit rhs");
 
-    if (!this->Fits(rhs) && !rhs.Fits(this))
-      throw std::invalid_argument("Incompatible types");
+    auto ret = Fixed();
 
-    if (this->Fits(rhs)) {
-      auto ret = Fixed<FSizeBytes, DecBits>();
-      // TODO:
-      return ret;
-    }
-
-    auto ret = Fixed<RSize, RDec>();
-    // TODO:
     return ret;
   };
 

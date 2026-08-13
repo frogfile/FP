@@ -4,7 +4,7 @@
 
 namespace FP {
 
-class Floating : public IPoint<sizeof(float)> {
+class Floating : public IPoint<sizeof(float), Floating> {
 public:
   Floating() = default;
   Floating(Floating &&) = default;
