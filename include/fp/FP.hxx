@@ -47,16 +47,22 @@ protected:
   IPoint() : _raw(std::array<uint8_t, ISizeBytes>()) {
     CRTP_CHECK(IPoint, Derived<ISizeBytes>);
   };
-  IPoint(IPoint &&) { CRTP_CHECK(IPoint, Derived<ISizeBytes>); };
-  IPoint(const IPoint &) { CRTP_CHECK(IPoint, Derived<ISizeBytes>); };
+
+  IPoint(IPoint &&other) : _raw(std::array<uint8_t, ISizeBytes>(other._raw)) {
+    CRTP_CHECK(IPoint, Derived<ISizeBytes>);
+  };
+  IPoint(IPoint const &other)
+      : _raw(std::array<uint8_t, ISizeBytes>(other._raw)) {
+    CRTP_CHECK(IPoint, Derived<ISizeBytes>);
+  };
 
   IPoint &operator=(IPoint &&) = default;
-  IPoint &operator=(const IPoint &) = default;
+  IPoint &operator=(IPoint const &) = default;
+
+  IPoint(std::array<uint8_t, ISizeBytes> raw) : _raw(raw) {}
   ~IPoint() = default;
 
 public:
-  IPoint(std::array<uint8_t, ISizeBytes> raw) : _raw(raw) {}
-
   ///
   /// @section Static type data methods
   ///
