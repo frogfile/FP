@@ -15,12 +15,19 @@
     return derived_t::name(__VA_ARGS__);                                       \
   }
 
+#define CRTP_STUB(base_t, derived_t, ret_t, name, ...)                         \
+  ret_t name(__VA_ARGS__) {                                                    \
+    CRTP_CHECK(base_t, derived_t);                                             \
+    return derived_t.name(__VA_ARGS__);                                        \
+  }
+
 #define CRTP_OPERATOR(ret_t, sym)                                              \
   template <template <size_t RSize> class RHS>                                 \
   constexpr ret_t operator sym(RHS<ISizeBytes> const &rhs) const {             \
     static_assert(std::is_base_of<IPoint, RHS<ISizeBytes>>::value,             \
                   "RHS is not derived from IPoint");                           \
-    return Derived<ISizeBytes>::template operator sym<RHS>(rhs);               \
+    return static_cast<Derived<ISizeBytes> *>(this)                            \
+        ->template operator sym<RHS>(rhs);                                     \
   }
 
 namespace FP {
@@ -37,7 +44,9 @@ private:
 protected:
   std::array<uint8_t, ISizeBytes> _raw;
 
-  IPoint() { CRTP_CHECK(IPoint, Derived<ISizeBytes>); };
+  IPoint() : _raw(std::array<uint8_t, ISizeBytes>()) {
+    CRTP_CHECK(IPoint, Derived<ISizeBytes>);
+  };
   IPoint(IPoint &&) { CRTP_CHECK(IPoint, Derived<ISizeBytes>); };
   IPoint(const IPoint &) { CRTP_CHECK(IPoint, Derived<ISizeBytes>); };
 
@@ -85,7 +94,9 @@ public:
   ///
 
   constexpr std::array<uint8_t, ISizeBytes> Raw() const { return _raw; };
-  constexpr operator std::array<uint8_t, ISizeBytes>() const { return _raw; };
+  constexpr explicit operator std::array<uint8_t, ISizeBytes>() const {
+    return _raw;
+  };
 
   constexpr typename std::array<uint8_t, ISizeBytes>::iterator Begin() const {
     return this->_raw.begin();
@@ -102,7 +113,7 @@ public:
   /// @section Conversion functions
   ///
 
-  constexpr operator double() const {
+  constexpr explicit operator double() const {
     return static_cast<Derived<ISizeBytes> *>(this)->operator double();
   };
 

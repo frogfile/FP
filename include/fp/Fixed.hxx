@@ -60,7 +60,7 @@ public:
     return static_cast<std::bitset<FSizeBytes * 8>>(this);
   }
 
-  constexpr operator std::bitset<FSizeBytes * 8>() const {
+  constexpr explicit operator std::bitset<FSizeBytes * 8>() const {
     auto ret = std::bitset<FSizeBytes * 8>();
 
     for (size_t i = 0; i < FSizeBytes; i++) {
@@ -72,7 +72,7 @@ public:
   }
 
   // NOTE: Only works if the Fixed fits into double (duh)
-  constexpr operator double() const {
+  constexpr explicit operator double() const {
     static_assert(FSizeBytes <= sizeof(double),
                   "Fixed doesn't fit into double");
 
@@ -123,15 +123,8 @@ public:
 
   // NOTE: lhs must fit rhs
 
-  /*
-  template <size_t RSize, size_t RDec>
-  constexpr Fixed operator+(Fixed<RSize, RDec> const &rhs) const {
-    static_assert(Fixed::template Fits<RSize * 8 - RDec, RDec>(),
-                  "Lhs does not fit rhs");
-
-    auto ret = Fixed();
-
-    return ret;
+  /*template <class RHS> constexpr Fixed operator+(RHS const &rhs) const {
+    return Fixed(); // Zero
   };*/
 
   // Fixed operator-(Fixed const &rhs) const { /* TODO: */ };

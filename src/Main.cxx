@@ -11,11 +11,14 @@ int main(int argc, char const *argv[]) {
   auto fixed4 =
       FP::Fixed<4, 2 * 8>(std::array<uint8_t, 4>{0x00, 16, 0x80, 0x00}); // 16.5
 
-  auto fixed8 = FP::Fixed<8, 3 * 8>();
+  auto fixed8 = FP::Fixed<8, 3 * 8>(
+      std::array<uint8_t, 8>{0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00});
 
   std::cout << fixed4 << '\n';
 
-  std::cout << fixed8 + fixed4;
+  FP::Fixed<8, 3 * 8> sum = fixed8 + fixed4;
+
+  std::cout << sum;
 
   // std::cout << fixed4.relaxed<6, 3 * 8 + 2>() << '\n'; // expected 5 24
 

@@ -4,6 +4,7 @@
 
 namespace FP {
 
+template <size_t FSizeBytes>
 class Floating : public IPoint<sizeof(float), Floating> {
 public:
   Floating() = default;
