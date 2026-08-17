@@ -20,14 +20,22 @@ namespace FP {
 // doesn't matter since you'll run out of memory waaaay before it becomes an
 // issue
 template <size_t FSizeBytes = 8, size_t DecBits = 16>
-class Fixed : public virtual IPoint<FSizeBytes, Fixed<FSizeBytes, DecBits>> {
+class Fixed : public IPoint<FSizeBytes, Fixed> {
 private:
-  using Base = IPoint<FSizeBytes, Fixed<FSizeBytes, DecBits>>;
+  using Base = IPoint<FSizeBytes, Fixed>;
 
 public:
+  ///
+  /// @section Static type data methods
+  ///
+
   static constexpr size_t Size() { return FSizeBytes; };
   static constexpr size_t NumDecimalBits() { return DecBits; };
   static constexpr size_t NumIntegerBits() { return FSizeBytes * 8 - DecBits; };
+
+  ///
+  /// @section Constructors
+  ///
 
   Fixed(std::array<uint8_t, FSizeBytes> raw) : Base(raw) {
     static_assert(FSizeBytes * 8 >= DecBits,
@@ -36,13 +44,17 @@ public:
 
   Fixed() : Base() {};
 
-  template <size_t RSize, size_t RDec>
-  Fixed(Fixed<RSize, RDec> const &other){
-      // static_assert(Fixed::Fits(other), "Other is bigger than this");
-      // TODO:
+  template <size_t RSize, size_t RDec> Fixed(Fixed<RSize, RDec> const &other) {
+    static_assert(Fixed::template Fits<RSize, RDec>(),
+                  "Other is bigger than this");
+    // TODO:
   };
 
   Fixed(double &val);
+
+  ///
+  /// @section Conversion functions
+  ///
 
   constexpr std::bitset<FSizeBytes * 8> Bits() const {
     return static_cast<std::bitset<FSizeBytes * 8>>(this);
@@ -60,7 +72,7 @@ public:
   }
 
   // NOTE: Only works if the Fixed fits into double (duh)
-  constexpr operator double() const override {
+  constexpr operator double() const {
     static_assert(FSizeBytes <= sizeof(double),
                   "Fixed doesn't fit into double");
 
@@ -105,7 +117,13 @@ public:
     return ret;
   };
 
+  ///
+  /// @section Operators
+  ///
+
   // NOTE: lhs must fit rhs
+
+  /*
   template <size_t RSize, size_t RDec>
   constexpr Fixed operator+(Fixed<RSize, RDec> const &rhs) const {
     static_assert(Fixed::template Fits<RSize * 8 - RDec, RDec>(),
@@ -114,13 +132,13 @@ public:
     auto ret = Fixed();
 
     return ret;
-  };
+  };*/
 
-  // Fixed operator-(Fixed const &rhs) const override { /* TODO: */ };
-  // Fixed operator*(Fixed const &rhs) const override { /* TODO: */ };
-  // Fixed operator/(Fixed const &rhs) const override { /* TODO: */ };
-  // bool operator>(Fixed const &rhs) const override { /* TODO: */ };
-  // bool operator<(Fixed const &rhs) const override { /* TODO: */ };
-  // bool operator==(Fixed const &rhs) const override { /* TODO: */ };
+  // Fixed operator-(Fixed const &rhs) const { /* TODO: */ };
+  // Fixed operator*(Fixed const &rhs) const { /* TODO: */ };
+  // Fixed operator/(Fixed const &rhs) const { /* TODO: */ };
+  // bool operator>(Fixed const &rhs) const { /* TODO: */ };
+  // bool operator<(Fixed const &rhs) const { /* TODO: */ };
+  // bool operator==(Fixed const &rhs) const { /* TODO: */ };
 };
 } // namespace FP
