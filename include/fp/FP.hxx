@@ -18,7 +18,7 @@
 #define CRTP_STUB(base_t, derived_t, ret_t, name, ...)                         \
   ret_t name(__VA_ARGS__) {                                                    \
     CRTP_CHECK(base_t, derived_t);                                             \
-    return derived_t.name(__VA_ARGS__);                                        \
+    return static_cast<derived_t *>(this)->name(__VA_ARGS__);                  \
   }
 
 #define CRTP_OPERATOR(ret_t, sym)                                              \
@@ -139,4 +139,5 @@ public:
 
 #undef CRTP_OPERATOR
 #undef CRTP_STUB_STATIC
+#undef CRTP_STUB
 #undef CRTP_CHECK
